@@ -170,12 +170,18 @@ function showPreview(data, container) {
                     focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40" />
     </div>`).join('');
 
+  const blockedBanner = data._blocked ? `
+    <p class="text-amber-300 bg-amber-900/30 border border-amber-700/50 rounded px-3 py-2 text-xs">
+      ⚠ ${esc(data._blockedMessage)}
+    </p>` : '';
+
   container.innerHTML = `
     <div class="mt-3 bg-slate-800 border border-slate-600 rounded-lg p-4 space-y-3">
       <p class="text-sm text-slate-300 font-medium">
         Review extracted data
         <span class="text-slate-500 font-normal">— edit any fields before saving</span>
       </p>
+      ${blockedBanner}
       <div class="space-y-2">${rows}</div>
       <div class="flex gap-2 pt-1">
         <button id="confirm-save"
@@ -210,6 +216,8 @@ async function handleSave() {
   const EDITABLE = ['property_name', 'address_line1', 'city', 'state', 'zip', 'phone',
                     'rent_summary_text', 'sqft_summary_text', 'availability_summary_text'];
   const payload = { ...pendingData };
+  delete payload._blocked;
+  delete payload._blockedMessage;
   EDITABLE.forEach(key => {
     const el = document.getElementById(`pv-${key}`);
     if (el) payload[key] = el.value;
@@ -242,6 +250,11 @@ async function callFetchFn(url) {
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+  // Attach blocked flag/message onto the data payload so the UI can surface it
+  if (json.blocked) {
+    json.data._blocked = true;
+    json.data._blockedMessage = json.message || 'Site blocked the fetch.';
+  }
   return json.data;
 }
 

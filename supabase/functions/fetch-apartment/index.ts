@@ -28,7 +28,31 @@ Deno.serve(async (req: Request) => {
     const data = parseApartmentHtml(html, url);
     return jsonResponse(200, { ok: true, data });
   } catch (e) {
-    return jsonResponse(500, { error: String(e) });
+    const msg = String(e);
+    // Site blocked the fetch (bot protection). Return a minimal stub so the
+    // user can still save the apartment and fill in fields manually.
+    if (msg.includes("HTTP 403") || msg.includes("HTTP 429") || msg.includes("HTTP 401")) {
+      return jsonResponse(200, {
+        ok: true,
+        blocked: true,
+        message: `Site blocked the fetch (${msg.match(/HTTP \d+/)?.[0] || "blocked"}). Fill in fields manually.`,
+        data: {
+          source_url: url,
+          source_domain: extractDomain(url),
+          property_name: "",
+          official_url: "",
+          address_line1: "",
+          city: "", state: "", zip: "",
+          phone: "",
+          rent_summary_text: "",
+          sqft_summary_text: "",
+          availability_summary_text: "",
+          raw_text: "",
+          last_fetched_at: new Date().toISOString(),
+        },
+      });
+    }
+    return jsonResponse(500, { error: msg });
   }
 });
 

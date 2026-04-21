@@ -27,20 +27,11 @@ jobs:
 
       # Write config.js from GitHub Secrets — never stored in repo
       - name: Generate config.js
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          python3 - <<'PYEOF'
-          import os
-          url = os.environ['SUPABASE_URL']
-          key = os.environ['SUPABASE_ANON_KEY']
-          with open('js/config.js', 'w') as f:
-              f.write(f"export const SUPABASE_URL = '{url}';\n")
-              f.write(f"export const SUPABASE_ANON_KEY = '{key}';\n")
-              f.write("export const FETCH_FN_URL = SUPABASE_URL + '/functions/v1/fetch-apartment';\n")
-          print('config.js written OK')
-          PYEOF
+          echo "export const SUPABASE_URL = '${{ secrets.SUPABASE_URL }}';" > js/config.js
+          echo "export const SUPABASE_ANON_KEY = '${{ secrets.SUPABASE_ANON_KEY }}';" >> js/config.js
+          echo "export const FETCH_FN_URL = SUPABASE_URL + '/functions/v1/fetch-apartment';" >> js/config.js
+          echo "Generated $(wc -c < js/config.js) bytes"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

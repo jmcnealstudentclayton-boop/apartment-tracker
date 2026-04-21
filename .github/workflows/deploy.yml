@@ -42,12 +42,6 @@ jobs:
           print('config.js written OK')
           PYEOF
 
-      - name: Verify config.js exists
-        run: |
-          ls -la js/config.js
-          echo "--- first line ---"
-          head -1 js/config.js
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
